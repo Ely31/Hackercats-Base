@@ -6,32 +6,39 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@TeleOp(name="ServoTest",group="test")
+@TeleOp(group="test")
 public class ServoTest extends LinearOpMode {
     // Pre-init
     public static double Pos1 = 0;
     public static double Pos2 = 1;
     public static double PosCenter = (Pos1+Pos2/2);
 
-    Servo test;
+    public static String servoName = "test";
+
+    Servo testServo;
 
     @Override
     public void runOpMode() {
         // Init
-    test = hardwareMap.servo.get("test");
+        testServo = hardwareMap.servo.get(servoName);
+
+        telemetry.setMsTransmissionInterval(100);
         waitForStart();
     
         // Pre-run
     
         while (opModeIsActive()) {
             // TeleOp loop
-            if (gamepad1.x) test.setPosition(Pos1);
-            if (gamepad1.b) test.setPosition(Pos2);
-            if (gamepad1.a) test.setPosition(PosCenter);
+            if (gamepad1.x) testServo.setPosition(Pos1);
+            if (gamepad1.b) testServo.setPosition(Pos2);
+            if (gamepad1.a) testServo.setPosition(PosCenter);
 
             PosCenter = (Pos1+Pos2/2);
 
-            telemetry.addData("pos",test.getPosition());
+            telemetry.addData("target pos", testServo.getPosition());
+            telemetry.addData("pos1", Pos1);
+            telemetry.addData("pos2", Pos2);
+            telemetry.addData("posCenter", PosCenter);
             telemetry.update();
         }
     }
