@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.util.opmode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -22,9 +24,12 @@ public class ServoTest extends LinearOpMode {
         // Init
         testServo = hardwareMap.servo.get(servoName);
 
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.setMsTransmissionInterval(100);
+        telemetry.addLine("BE CAREFUL! it's possible to break something by typing in the wrong numbers");
+        telemetry.update();
+
         waitForStart();
-    
         // Pre-run
     
         while (opModeIsActive()) {
