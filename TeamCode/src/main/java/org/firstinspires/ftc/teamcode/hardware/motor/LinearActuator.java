@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.hardware;
+package org.firstinspires.ftc.teamcode.hardware.motor;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.util.Utility;
 
 import java.util.Objects;
 
-public class Motor {
+public class LinearActuator {
     private DcMotorEx motor;
     Utility utility = new Utility();
     HardwareMap hardwareMap;
@@ -18,15 +18,18 @@ public class Motor {
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
     public double TICKS_PER_DEGREE;
-    private double MaxAngle;
-    private double MinAngle;
+    public double TICKS_PER_INCH;
+    public double INCHES_PER_ROTATION;
+    public double EFFECTIVE_RADIUS;
+    private double maxDistance;
+    private double minDistance;
     private final MotorConstants motorConstants = new MotorConstants();
 
     private double targetAngle;
 
 
     // Constructors
-    Motor (HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
+    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -41,11 +44,12 @@ public class Motor {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
+        INCHES_PER_ROTATION = inchesPerRotation;
+        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    Motor (HardwareMap hardwareMap, String name, double gearboxRatio) {
+    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -60,11 +64,12 @@ public class Motor {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
+        INCHES_PER_ROTATION = inchesPerRotation;
+        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    Motor (HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
+    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -79,12 +84,13 @@ public class Motor {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
+        INCHES_PER_ROTATION = inchesPerRotation;
+        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
 
-    Motor (HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
+    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -99,7 +105,8 @@ public class Motor {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
+        INCHES_PER_ROTATION = inchesPerRotation;
+        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
@@ -121,35 +128,29 @@ public class Motor {
 
     // Position things
     public void setLimits(double min, double max){
-        MinAngle = min;
-        MaxAngle = max;
+        minDistance = min;
+        maxDistance = max;
     }
 
-    public double getMaxAngle() {
-        return MaxAngle;
+    public double getMaxDistance() {
+        return maxDistance;
     }
 
-    public  double getMinAngle() {
-        return MinAngle;
+    public  double getMinDistance() {
+        return minDistance;
     }
 
-    public void runToAngle_UNSAFE(double angle) {
+    public void runToDistance(double angle) { // Make sure to use .setLimits before using this
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = angle;
+        targetAngle = utility.clipValue(minDistance, maxDistance, angle);
         motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
     }
 
-    public void runToAngle(double angle) { // Make sure to use .setLimits before using this
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = utility.clipValue(MinAngle, MaxAngle, angle);
-        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
-    }
-
-    public double getTargetAngle() {
+    public double getTargetDistance() {
         return targetAngle;
     }
 
-    public double getCurrentAngle() {
+    public double getCurrentDistance() {
         return motor.getCurrentPosition() / TICKS_PER_DEGREE;
     }
 
@@ -159,12 +160,11 @@ public class Motor {
         return motor.getCurrent(CurrentUnit.AMPS);
     }
 
-    public double getVelocity(boolean inRotations) {
-        if (inRotations) return motor.getVelocity() / TICKS_PER_REV;
-        else return motor.getVelocity() / TICKS_PER_DEGREE;
+    public double getVelocityInRotations() {
+       return motor.getVelocity() / TICKS_PER_REV;
     }
 
-    public double getVelocity() {
+    public double getVelocityInDegrees() {
         return motor.getVelocity() / TICKS_PER_DEGREE;
     }
 }

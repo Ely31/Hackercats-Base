@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.hardware;
+package org.firstinspires.ftc.teamcode.hardware.motor;
 
 public class MotorConstants {
     public final double TICKS_509 = 1425.1;
