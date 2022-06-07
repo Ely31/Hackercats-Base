@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
@@ -18,15 +19,16 @@ public class Actuator {
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
     public double TICKS_PER_DEGREE;
-    private double MaxAngle;
-    private double MinAngle;
+    private double maxAngle;
+    private double minAngle;
+    private double maxPower = 1;
     private final MotorConstants motorConstants = new MotorConstants();
 
-    private double targetAngle;
+    private double targetAngle = 0;
 
 
     // Constructors
-    Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -45,7 +47,7 @@ public class Actuator {
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    Actuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -64,7 +66,7 @@ public class Actuator {
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -84,7 +86,7 @@ public class Actuator {
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
 
-    Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -121,26 +123,42 @@ public class Actuator {
 
     // Position things
     public void setLimits(double min, double max){
-        MinAngle = min;
-        MaxAngle = max;
+        minAngle = min;
+        maxAngle = max;
     }
     public double getMaxAngle() {
-        return MaxAngle;
+        return maxAngle;
     }
     public  double getMinAngle() {
-        return MinAngle;
-    }
-
-    public void runToAngle_UNSAFE(double angle) {
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = angle;
-        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        return minAngle;
     }
 
     public void runToAngle(double angle) { // Make sure to use .setLimits before using this
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = utility.clipValue(MinAngle, MaxAngle, angle);
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
         motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(1);
+    }
+
+    public void runToAngle(double angle, double power) { // Make sure to use .setLimits before using this
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(power);
+    }
+
+    public void runToAngle_UNSAFE(double angle) {
+        targetAngle = angle;
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(1);
+    }
+
+    public void runToAngle_UNSAFE(double angle, double power) {
+        targetAngle = angle;
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(power);
     }
 
     public double getTargetAngle() {

@@ -28,13 +28,18 @@ public class PIDActuator {
     private double P = 0;
     private double I = 0;
     private double D = 0;
+    public void setPIDCoefficients(double p, double i, double d){
+        P = p;
+        I = i;
+        D = d;
+    }
     private PIDCoefficients coefficients = new PIDCoefficients(P, I, D);
-    private PIDFController controller = new PIDFController(coefficients);
+    public PIDFController controller = new PIDFController(coefficients);
 
     private double targetAngle;
 
     // Constructors
-    PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
+    public PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -54,7 +59,7 @@ public class PIDActuator {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
+    public PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -74,7 +79,7 @@ public class PIDActuator {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
+    public PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -95,7 +100,7 @@ public class PIDActuator {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
+    public PIDActuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
