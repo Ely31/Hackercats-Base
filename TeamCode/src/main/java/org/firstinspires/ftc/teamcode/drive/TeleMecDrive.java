@@ -22,7 +22,7 @@ public class TeleMecDrive {
 
     private double slowFactor;
 
-    TeleMecDrive(HardwareMap hardwareMap, double slowFactor) {
+    public TeleMecDrive(HardwareMap hardwareMap, double slowFactor) {
         lf = hardwareMap.get(DcMotor.class,"lf");
         lb = hardwareMap.get(DcMotor.class,"lb");
         rf = hardwareMap.get(DcMotor.class,"rf");
