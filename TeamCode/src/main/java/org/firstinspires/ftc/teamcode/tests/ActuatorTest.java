@@ -11,23 +11,21 @@ import org.firstinspires.ftc.teamcode.hardware.actuators.Actuator;
 public class ActuatorTest extends LinearOpMode {
     // Pre init
     Actuator test;
+    String name;
     @Override
     public void runOpMode(){
         // Init
-        test = new Actuator(hardwareMap, "carousel", 3.7);
+        test = new Actuator(hardwareMap, name, 3.7);
         test.setLimits(0,360);
+        test.connectTelemetry(telemetry);
         waitForStart();
         while (opModeIsActive()){
             // Teleop code
             if (gamepad1.a) {test.runToAngle(180);}
             else test.runToAngle(0);
 
-            telemetry.setMsTransmissionInterval(100);
-            telemetry.addData("current angle", test.getCurrentAngle());
-            telemetry.addData("target angle", test.getTargetAngle());
-            telemetry.addData("electical current", test.getCurrent());
+            test.displayDebugInfo();
             telemetry.update();
-
         }
     }
 }

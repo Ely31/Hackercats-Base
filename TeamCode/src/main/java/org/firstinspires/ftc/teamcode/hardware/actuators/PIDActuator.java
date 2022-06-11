@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
@@ -14,12 +15,13 @@ public class PIDActuator {
     private DcMotorEx motor;
     Utility utility = new Utility();
     String name;
+    Telemetry telemetry;
     public double GEARBOX_RATIO;
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
     public double TICKS_PER_DEGREE;
-    private double MaxAngle;
-    private double MinAngle;
+    private double maxAngle;
+    private double minAngle;
     private double targetAngle;
     private final MotorConstants motorConstants = new MotorConstants();
 
@@ -83,19 +85,19 @@ public class PIDActuator {
 
     // Position things
     public void setLimits(double min, double max){
-        MinAngle = min;
-        MaxAngle = max;
+        minAngle = min;
+        maxAngle = max;
     }
     public double getMaxAngle() {
-        return MaxAngle;
+        return maxAngle;
     }
     public  double getMinAngle() {
-        return MinAngle;
+        return minAngle;
     }
 
     public void runToAngle(double angle) { // Make sure to use .setLimits before using this
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        targetAngle = utility.clipValue(MinAngle, MaxAngle, angle);
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
         controller.setTargetPosition( targetAngle);
         motor.setPower(controller.update(getCurrentAngle()));
     }
@@ -112,6 +114,23 @@ public class PIDActuator {
     }
 
     // Miscellaneous methods
+    public void connectTelemetry(Telemetry telemetry){
+        this.telemetry = telemetry;
+        this.telemetry.setMsTransmissionInterval(100);
+    }
+    public void displayDebugInfo() {
+        telemetry.addData("Current angle", getCurrentAngle());
+        telemetry.addData("Target angle", getTargetAngle());
+        telemetry.addData("Controller output", controller.update(getCurrentAngle()));
+        telemetry.addData("Min", minAngle);
+        telemetry.addData("Max", maxAngle);
+        telemetry.addData("Runmode", motor.getMode());
+        telemetry.addData("Power", motor.getPower());
+        telemetry.addData("Current", getCurrent());
+        telemetry.addData("Ticks per degree", TICKS_PER_DEGREE);
+        telemetry.addData("Tick per rev", TICKS_PER_REV);
+    }
+
     public double getCurrent() {
         return motor.getCurrent(CurrentUnit.AMPS);
     }

@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode.hardware.actuators;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
@@ -13,8 +16,8 @@ import java.util.Objects;
 public class LinearActuator {
     private DcMotorEx motor;
     Utility utility = new Utility();
-    HardwareMap hardwareMap;
     String name;
+    Telemetry telemetry;
     public double GEARBOX_RATIO;
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
@@ -24,13 +27,19 @@ public class LinearActuator {
     public double EFFECTIVE_RADIUS;
     private double maxDistance;
     private double minDistance;
+    private double targetDistance;
     private final MotorConstants motorConstants = new MotorConstants();
 
-    private double targetAngle;
+    // Pid stuff
+    public PIDFController controller;
+    // Must call setCoefficients to use this
+    public void setCoefficients(PIDCoefficients coefficients) {
+        controller = new PIDFController(coefficients);
+    }
 
 
     // Constructors
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation) {
+    public LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -42,7 +51,7 @@ public class LinearActuator {
         if (GEARBOX_RATIO == 19.2) TICKS_PER_REV = motorConstants.TICKS_192 * EXTERNAL_GEAR_RATIO;
         if (GEARBOX_RATIO == 26.9) TICKS_PER_REV = motorConstants.TICKS_269 * EXTERNAL_GEAR_RATIO;
         if (GEARBOX_RATIO == 50.9) TICKS_PER_REV = motorConstants.TICKS_509 * EXTERNAL_GEAR_RATIO;
-        if (Objects.isNull(TICKS_PER_REV)) {
+        if (TICKS_PER_REV == 0.0) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
         INCHES_PER_ROTATION = inchesPerRotation;
@@ -50,7 +59,7 @@ public class LinearActuator {
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation) {
+    public LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -62,7 +71,7 @@ public class LinearActuator {
         if (GEARBOX_RATIO == 19.2) TICKS_PER_REV = motorConstants.TICKS_192 * EXTERNAL_GEAR_RATIO;
         if (GEARBOX_RATIO == 26.9) TICKS_PER_REV = motorConstants.TICKS_269 * EXTERNAL_GEAR_RATIO;
         if (GEARBOX_RATIO == 50.9) TICKS_PER_REV = motorConstants.TICKS_509 * EXTERNAL_GEAR_RATIO;
-        if (Objects.isNull(TICKS_PER_REV)) {
+        if (TICKS_PER_REV == 0.0) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
         INCHES_PER_ROTATION = inchesPerRotation;
@@ -71,7 +80,7 @@ public class LinearActuator {
     }
 
     // Methods
-    // Power and primative things
+    // Setting power on a linear mech is probably a dangerous thing to do most of the time
     public void setPower(double power) {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setPower(power);
@@ -98,26 +107,45 @@ public class LinearActuator {
         return minDistance;
     }
 
-    public void runToDistance(double angle) { // Make sure to use .setLimits before using this
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = utility.clipValue(minDistance, maxDistance, angle);
-        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+    public void runToDistance(double distance) { // Make sure to use .setLimits before using this
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        targetDistance = utility.clipValue(minDistance, maxDistance, distance);
+        controller.setTargetPosition(targetDistance);
+        motor.setPower(controller.update(getCurrentDistance()));
     }
 
     public double getTargetDistance() {
-        return targetAngle;
+        return targetDistance;
     }
 
     public double getCurrentDistance() {
-        return motor.getCurrentPosition() / TICKS_PER_DEGREE;
+        return motor.getCurrentPosition() / TICKS_PER_INCH;
     }
 
 
     // Miscellaneous methods
+    public void connectTelemetry(Telemetry telemetry){
+        this.telemetry = telemetry;
+        this.telemetry.setMsTransmissionInterval(100);
+    }
+
+    public void displayDebugInfo(){
+        telemetry.addData("Current distance", getCurrentDistance());
+        telemetry.addData("Target distance", targetDistance);
+        telemetry.addData("Min distance", minDistance);
+        telemetry.addData("Max distance", maxDistance);
+        telemetry.addData("Controller output", controller.update(getCurrentDistance()));
+        telemetry.addData("Power", motor.getPower());
+        telemetry.addData("Current", getCurrent());
+        telemetry.addData("Ticks per degree", TICKS_PER_DEGREE);
+        telemetry.addData("Tick per rev", TICKS_PER_REV);
+        telemetry.addData("Ticks per inch", TICKS_PER_INCH);
+        telemetry.update();
+    }
+
     public double getCurrent() {
         return motor.getCurrent(CurrentUnit.AMPS);
     }
-
     public double getVelocityInRotations() {
        return motor.getVelocity() / TICKS_PER_REV;
     }
