@@ -19,7 +19,7 @@ public class MotorTestPID extends LinearOpMode {
     DcMotor testMotor;
     Utility utility = new Utility();
 
-    public static String motorName = "test";
+    public static String motorName = "carousel";
     public static double gearboxRatio = 3.7;
     public static double externalGearRatio = 1.0/1.0;
     double ticksPerRev = gearboxRatio * 28 /externalGearRatio; // This equals the ticks per rev on the final output of the system

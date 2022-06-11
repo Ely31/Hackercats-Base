@@ -1,16 +1,15 @@
-package org.firstinspires.ftc.teamcode.hardware.motor;
+package org.firstinspires.ftc.teamcode.hardware.actuators;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
 import java.util.Objects;
 
-public class Actuator {
+public class ActuatorSimple {
     private DcMotorEx motor;
     Utility utility = new Utility();
     HardwareMap hardwareMap;
@@ -28,7 +27,7 @@ public class Actuator {
 
 
     // Constructors
-    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
+    public ActuatorSimple(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -47,7 +46,7 @@ public class Actuator {
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
+    public ActuatorSimple(HardwareMap hardwareMap, String name, double gearboxRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -66,7 +65,7 @@ public class Actuator {
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
+    public ActuatorSimple(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -86,7 +85,7 @@ public class Actuator {
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
 
-    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
+    public ActuatorSimple(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;

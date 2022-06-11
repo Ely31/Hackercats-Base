@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.hardware.motor;
+package org.firstinspires.ftc.teamcode.hardware.actuators;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.util.Utility;
 
 import java.util.Objects;
 
-public class LinearActuator {
+public class Actuator {
     private DcMotorEx motor;
     Utility utility = new Utility();
     HardwareMap hardwareMap;
@@ -18,18 +18,16 @@ public class LinearActuator {
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
     public double TICKS_PER_DEGREE;
-    public double TICKS_PER_INCH;
-    public double INCHES_PER_ROTATION;
-    public double EFFECTIVE_RADIUS;
-    private double maxDistance;
-    private double minDistance;
+    private double maxAngle;
+    private double minAngle;
+    private double maxPower = 1;
     private final MotorConstants motorConstants = new MotorConstants();
 
-    private double targetAngle;
+    private double targetAngle = 0;
 
 
     // Constructors
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -44,12 +42,11 @@ public class LinearActuator {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        INCHES_PER_ROTATION = inchesPerRotation;
-        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
+        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -64,12 +61,11 @@ public class LinearActuator {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        INCHES_PER_ROTATION = inchesPerRotation;
-        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
+        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
         motor = hardwareMap.get(DcMotorEx.class, name);
     }
 
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, double inchesPerRotation, boolean reversed) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = externalGearRatio;
@@ -84,13 +80,12 @@ public class LinearActuator {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        INCHES_PER_ROTATION = inchesPerRotation;
-        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
+        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
 
-    LinearActuator(HardwareMap hardwareMap, String name, double gearboxRatio, double inchesPerRotation, boolean reversed) {
+    public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, boolean reversed) {
         this.name = name;
         GEARBOX_RATIO = gearboxRatio;
         EXTERNAL_GEAR_RATIO = 1;
@@ -105,8 +100,7 @@ public class LinearActuator {
         if (Objects.isNull(TICKS_PER_REV)) {
             throw new IllegalArgumentException("Invalid gearbox ratio");
         }
-        INCHES_PER_ROTATION = inchesPerRotation;
-        TICKS_PER_INCH = TICKS_PER_REV / INCHES_PER_ROTATION;
+        TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
         motor = hardwareMap.get(DcMotorEx.class, name);
         motor.setDirection(reversed ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
     }
@@ -128,29 +122,48 @@ public class LinearActuator {
 
     // Position things
     public void setLimits(double min, double max){
-        minDistance = min;
-        maxDistance = max;
+        minAngle = min;
+        maxAngle = max;
+    }
+    public double getMaxAngle() {
+        return maxAngle;
+    }
+    public  double getMinAngle() {
+        return minAngle;
     }
 
-    public double getMaxDistance() {
-        return maxDistance;
-    }
-
-    public  double getMinDistance() {
-        return minDistance;
-    }
-
-    public void runToDistance(double angle) { // Make sure to use .setLimits before using this
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        targetAngle = utility.clipValue(minDistance, maxDistance, angle);
+    public void runToAngle(double angle) { // Make sure to use .setLimits before using this
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
         motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(1);
     }
 
-    public double getTargetDistance() {
+    public void runToAngle(double angle, double power) { // Make sure to use .setLimits before using this
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(power);
+    }
+
+    public void runToAngle_UNSAFE(double angle) {
+        targetAngle = angle;
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(1);
+    }
+
+    public void runToAngle_UNSAFE(double angle, double power) {
+        targetAngle = angle;
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(power);
+    }
+
+    public double getTargetAngle() {
         return targetAngle;
     }
-
-    public double getCurrentDistance() {
+    public double getCurrentAngle() {
         return motor.getCurrentPosition() / TICKS_PER_DEGREE;
     }
 
@@ -161,9 +174,8 @@ public class LinearActuator {
     }
 
     public double getVelocityInRotations() {
-       return motor.getVelocity() / TICKS_PER_REV;
+        return motor.getVelocity() / TICKS_PER_REV;
     }
-
     public double getVelocityInDegrees() {
         return motor.getVelocity() / TICKS_PER_DEGREE;
     }
