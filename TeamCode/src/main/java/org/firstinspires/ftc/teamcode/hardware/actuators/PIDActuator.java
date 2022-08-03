@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.util.Utility;
 
 public class PIDActuator {
     private DcMotorEx motor;
+    private final MotorConstants motorConstants = new MotorConstants();
     Utility utility = new Utility();
     String name;
     Telemetry telemetry;
@@ -20,16 +22,20 @@ public class PIDActuator {
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
     public double TICKS_PER_REV;
     public double TICKS_PER_DEGREE;
+    private double ENCODER_TICKS_PER_REV;
     private double maxAngle;
     private double minAngle;
     private double targetAngle;
-    private final MotorConstants motorConstants = new MotorConstants();
+    private double targetVelocity;
 
     // Pid stuff
-    public PIDFController controller;
-    // Must call setCoefficients to use this
-    public void setCoefficients(PIDCoefficients coefficients) {
-        controller = new PIDFController(coefficients);
+    public PIDFController positionController;
+    // Must call setCoefficients to use any pid features
+    public void setPositionCoefficients(PIDCoefficients coefficients) {
+        positionController = new PIDFController(coefficients);
+    }
+    public void setVelocityCoefficients(PIDFCoefficients coefficients) {
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
     }
 
     // Constructors
@@ -94,18 +100,6 @@ public class PIDActuator {
     public  double getMinAngle() {
         return minAngle;
     }
-
-    public void runToAngle(double angle) { // Make sure to use .setLimits before using this
-        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
-        controller.setTargetPosition( targetAngle);
-        motor.setPower(controller.update(getCurrentAngle()));
-    }
-    // MAKE SURE TO CALL UPDATE EVERY LOOP!
-    public void update(){
-        controller.update(getCurrentAngle());
-    }
-
     public double getTargetAngle() {
         return targetAngle;
     }
@@ -113,17 +107,58 @@ public class PIDActuator {
         return motor.getCurrentPosition() / TICKS_PER_DEGREE;
     }
 
+    public void runToAngle(double angle) { // Make sure to use .setLimits before using this
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        targetAngle = utility.clipValue(minAngle, maxAngle, angle);
+        positionController.setTargetPosition( targetAngle);
+        motor.setPower(positionController.update(getCurrentAngle()));
+    }
+    // MAKE SURE TO CALL UPDATE EVERY LOOP!
+    public void updatePositionControl(){
+        positionController.update(getCurrentAngle());
+    }
+
+
+    // Velocity things
+    public double getTargetVelocity() {
+        return targetVelocity;
+    }
+    public double getVelocityInRotations() {
+        return motor.getVelocity() / TICKS_PER_REV;
+    }
+    public double getVelocityInDegrees() {
+        return motor.getVelocity() / TICKS_PER_DEGREE;
+    }
+
+    public void setVelocity(double velocity) { // In rotations
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        targetVelocity = velocity;
+        motor.setVelocity(velocity * TICKS_PER_REV); // Convert rotations to ticks
+    }
+
     // Miscellaneous methods
     public void connectTelemetry(Telemetry telemetry){
         this.telemetry = telemetry;
         this.telemetry.setMsTransmissionInterval(100);
     }
-    public void displayDebugInfo() {
+    public void displayPositionDebugInfo() {
         telemetry.addData("Current angle", getCurrentAngle());
         telemetry.addData("Target angle", getTargetAngle());
-        telemetry.addData("Controller output", controller.update(getCurrentAngle()));
+        telemetry.addData("Error", positionController.getLastError());
+        telemetry.addData("Controller output", positionController.update(getCurrentAngle()));
         telemetry.addData("Min", minAngle);
         telemetry.addData("Max", maxAngle);
+        telemetry.addData("Runmode", motor.getMode());
+        telemetry.addData("Power", motor.getPower());
+        telemetry.addData("Current", getCurrent());
+        telemetry.addData("Ticks per degree", TICKS_PER_DEGREE);
+        telemetry.addData("Tick per rev", TICKS_PER_REV);
+    }
+
+    public void displayVelocityDebugInfo() {
+        telemetry.addData("Current velocity", getVelocityInRotations());
+        telemetry.addData("Target velocity", getTargetVelocity());
+        telemetry.addData("Velo coefficients", motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
         telemetry.addData("Runmode", motor.getMode());
         telemetry.addData("Power", motor.getPower());
         telemetry.addData("Current", getCurrent());
@@ -135,11 +170,4 @@ public class PIDActuator {
         return motor.getCurrent(CurrentUnit.AMPS);
     }
     public double getPower() {return motor.getPower();}
-
-    public double getVelocityInRotations() {
-        return motor.getVelocity() / TICKS_PER_REV;
-    }
-    public double getVelocityInDegrees() {
-        return motor.getVelocity() / TICKS_PER_DEGREE;
-    }
 }

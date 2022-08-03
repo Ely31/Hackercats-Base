@@ -11,10 +11,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
-import java.util.Objects;
-
 public class LinearActuator {
     private DcMotorEx motor;
+    private final MotorConstants motorConstants = new MotorConstants();
     Utility utility = new Utility();
     String name;
     Telemetry telemetry;
@@ -28,7 +27,6 @@ public class LinearActuator {
     private double maxDistance;
     private double minDistance;
     private double targetDistance;
-    private final MotorConstants motorConstants = new MotorConstants();
 
     // Pid stuff
     public PIDFController controller;

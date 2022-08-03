@@ -13,6 +13,7 @@ import java.util.Objects;
 
 public class Actuator {
     private DcMotorEx motor;
+    private final MotorConstants motorConstants = new MotorConstants();
     Utility utility = new Utility();
     Telemetry telemetry;
     String name;
@@ -23,7 +24,6 @@ public class Actuator {
     private double maxAngle;
     private double minAngle;
     private double maxPower = 1;
-    private final MotorConstants motorConstants = new MotorConstants();
 
     private double targetAngle = 0;
 
@@ -129,6 +129,17 @@ public class Actuator {
         return motor.getCurrentPosition() / TICKS_PER_DEGREE;
     }
 
+    // Velocity things
+    public void setVelocity(double velocity) {
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Not actually true setVelo, but it works
+        motor.setPower(velocity);
+    }
+    public double getVelocityInRotations() {
+        return motor.getVelocity() / TICKS_PER_REV;
+    }
+    public double getVelocityInDegrees() {
+        return motor.getVelocity() / TICKS_PER_DEGREE;
+    }
 
     // Miscellaneous methods
     public void connectTelemetry(Telemetry telemetry){
@@ -150,11 +161,5 @@ public class Actuator {
 
     public double getCurrent() {
         return motor.getCurrent(CurrentUnit.AMPS);
-    }
-    public double getVelocityInRotations() {
-        return motor.getVelocity() / TICKS_PER_REV;
-    }
-    public double getVelocityInDegrees() {
-        return motor.getVelocity() / TICKS_PER_DEGREE;
     }
 }

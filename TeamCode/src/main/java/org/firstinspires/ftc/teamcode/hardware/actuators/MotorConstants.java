@@ -9,5 +9,7 @@ public class MotorConstants {
     public final double TICKS_37 = 103.8;
     public final double BARE = 28;
 
+    public final double MAX_RPM = 6000;
+
     public final double stallCurrent = 7.5; // Probably will never use stallcurrent, but eh
 }

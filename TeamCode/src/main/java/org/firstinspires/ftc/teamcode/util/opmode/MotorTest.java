@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.util.TruePress;
+import org.firstinspires.ftc.teamcode.util.GamepadUtilOld;
 import org.firstinspires.ftc.teamcode.util.Utility;
 
 @Config
@@ -16,8 +16,8 @@ public class MotorTest extends LinearOpMode {
     // Pre-init
     DcMotor testMotor;
     Utility utility = new Utility();
-    TruePress toggleMode = new TruePress();
-    TruePress toggleDirection = new TruePress();
+    GamepadUtilOld toggleMode = new GamepadUtilOld();
+    GamepadUtilOld toggleDirection = new GamepadUtilOld();
     public static String motorName = "test";
     public static int maxPower = 1;
     public static double gearboxRatio = 19.203;
