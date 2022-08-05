@@ -33,9 +33,15 @@ public class GamepadDebugger extends LinearOpMode {
             }
 
             // Rumble the left side when dpad left is pressed
-            if (gamepad1.dpad_left) gamepad1.rumble(1,0,300);
+            if (gamepad1.dpad_right) gamepad1.rumble(0,1,300);
             // Rumble the right side when right is pressed
-            if (gamepad1.dpad_left) gamepad1.rumble(0,1,300);
+            if (gamepad1.dpad_left) gamepad1.rumble(1,0,300);
+
+            if (gamepad1.cross) gamepad1.setLedColor(0,0,255, 300);
+            if (gamepad1.circle) gamepad1.setLedColor(255,0,0, 300);
+            if (gamepad1.triangle) gamepad1.setLedColor(0,255,0, 300);
+            if (gamepad1.square) gamepad1.setLedColor(255,0,255, 300);
+
 
             telemetry.addLine("Press share to toggle display of boolean inputs");
             telemetry.addData("at rest", currentGamepad.atRest());
@@ -57,16 +63,20 @@ public class GamepadDebugger extends LinearOpMode {
                 telemetry.addData("Touchpad pressed", currentGamepad.touchpad);
             }
 
-            telemetry.addData("L stick X", currentGamepad.left_stick_x);
-            telemetry.addData("L stick Y", currentGamepad.left_stick_y);
-            telemetry.addData("R stick X", currentGamepad.right_stick_x);
-            telemetry.addData("R stick Y", currentGamepad.right_stick_y);
+            telemetry.addLine("Left stick: ")
+                    .addData("X", currentGamepad.left_stick_x)
+                    .addData("Y", currentGamepad.left_stick_y);
+            telemetry.addLine("Right stick: ")
+                    .addData("X", currentGamepad.right_stick_x)
+                    .addData("Y", currentGamepad.right_stick_y);
+
             telemetry.addData("Left trigger", currentGamepad.left_trigger);
             telemetry.addData("Right trigger", currentGamepad.right_trigger);
-            telemetry.addLine("Touchpad finger 1")
+
+            telemetry.addLine("Touchpad finger 1: ")
                     .addData("X",currentGamepad.touchpad_finger_1_x)
                     .addData("Y",currentGamepad.touchpad_finger_1_y);
-            telemetry.addLine("Touchpad finger 2")
+            telemetry.addLine("Touchpad finger 2: ")
                     .addData("X",currentGamepad.touchpad_finger_2_x)
                     .addData("Y",currentGamepad.touchpad_finger_2_y);
 

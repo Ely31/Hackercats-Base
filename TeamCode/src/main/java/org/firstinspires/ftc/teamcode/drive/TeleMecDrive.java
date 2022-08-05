@@ -26,6 +26,7 @@ public class TeleMecDrive {
     private BNO055IMU imu;
     BNO055IMU.Parameters imuParameters;
     public double heading;
+    private double headingOffset = 0;
 
     private double rotX;
     private double rotY;
@@ -110,7 +111,7 @@ public class TeleMecDrive {
 
         slowInput = ((-1 + slowFactor) * slowInput)+1;
 
-        heading = -(imu.getAngularOrientation().firstAngle + (AutoToTele.endOfAutoHeading-Math.toRadians(90 * AutoToTele.allianceSide)));
+        heading = -(imu.getAngularOrientation().firstAngle + (AutoToTele.endOfAutoHeading-Math.toRadians(90 * AutoToTele.allianceSide)) + headingOffset);
 
         rotX = x * Math.cos(heading) - -y * Math.sin(heading);
         rotY = x * Math.sin(heading) + -y * Math.cos(heading);
@@ -149,6 +150,6 @@ public class TeleMecDrive {
     }
     public void resetHeading(){
         AutoToTele.endOfAutoHeading = (Math.PI/2)*AutoToTele.allianceSide; // Unit circle coming in handy
-        imu.initialize(imuParameters);
+        headingOffset = -(imu.getAngularOrientation().firstAngle + (AutoToTele.endOfAutoHeading-Math.toRadians(90 * AutoToTele.allianceSide)));
     }
 }
