@@ -16,15 +16,14 @@ public class ActuatorTest extends LinearOpMode {
     public void runOpMode(){
         // Init
         test = new Actuator(hardwareMap, name, 3.7);
-        test.setLimits(0,360);
-        test.connectTelemetry(telemetry);
+        //test.setLimits(0,360);
         waitForStart();
         while (opModeIsActive()){
             // Teleop code
-            if (gamepad1.a) {test.runToAngle(180);}
-            else test.runToAngle(0);
+            if (gamepad1.a) {test.runToAngleRTP(180);}
+            else test.runToAngleRTP(0);
 
-            test.displayDebugInfo();
+            test.displayDebugInfo(telemetry);
             telemetry.update();
         }
     }

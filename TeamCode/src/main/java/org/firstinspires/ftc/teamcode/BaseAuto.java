@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 public class BaseAuto extends LinearOpMode {
     // Pre init
     SampleMecanumDrive drive;
-
     Pose2d startpos = new Pose2d(0,0,Math.toRadians(0));
 
     TrajectorySequence traj;

@@ -5,4 +5,11 @@ public class Utility {
     public double clipValue(double min, double max, double input){
         return Math.max(min, Math.min(input, max)); // Copied from stack overflow
     }
+    // Takes an input and checks if it's close enough to the normal value
+    public boolean withinErrorOfValue(double input, double normalValue, double acceptableError){
+        double min = normalValue - acceptableError;
+        double max = normalValue + acceptableError;
+
+        return (min < input && input < max);
+    }
 }

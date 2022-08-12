@@ -9,7 +9,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class ServoEx {
     private ServoImplEx servo;
-    Telemetry telemetry;
     private double travel;
     private double offset = 0; // For when the horn can't be put in the perfect spot
 
@@ -60,12 +59,7 @@ public class ServoEx {
     }
 
     // Telemetry stuff
-    public void connectTelemetry(Telemetry telemetry) {
-        this.telemetry = telemetry;
-        this.telemetry.setMsTransmissionInterval(100);
-    }
-
-    public void displayDebugInfo() {
+    public void displayDebugInfo(Telemetry telemetry) {
         if (telemetry != null) {
             telemetry.addData("Position", servo.getPosition());
             telemetry.addData("Angle", getAngle());
