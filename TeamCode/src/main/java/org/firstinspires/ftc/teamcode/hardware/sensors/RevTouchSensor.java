@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-public class TouchSensor {
+public class RevTouchSensor {
     com.qualcomm.robotcore.hardware.TouchSensor touchsensor;
     String name;
     boolean currentState;
@@ -12,7 +12,7 @@ public class TouchSensor {
     boolean justPressed;
     boolean justReleased;
 
-    public TouchSensor(HardwareMap hardwareMap, String name){
+    public RevTouchSensor(HardwareMap hardwareMap, String name){
         this.name = name;
         touchsensor = hardwareMap.get(com.qualcomm.robotcore.hardware.TouchSensor.class, this.name);
     }

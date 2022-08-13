@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode.hardware.sensors;
 
+import com.outoftheboxrobotics.photoncore.Neutrino.RevColorSensor.RevColorSensorV3Ex;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Scalar;
 
-public class ColorSensor {
-    com.qualcomm.robotcore.hardware.ColorSensor colorSensor;
+public class RevColorSensor {
+    RevColorSensorV3Ex colorSensor;
     String name;
 
     int alpha;
@@ -15,9 +16,9 @@ public class ColorSensor {
     int blue;
     Scalar scalar;
 
-    public ColorSensor(HardwareMap hardwareMap, String name){
+    public RevColorSensor(HardwareMap hardwareMap, String name){
         this.name = name;
-        colorSensor = hardwareMap.get(com.qualcomm.robotcore.hardware.ColorSensor.class, name);
+        colorSensor = hardwareMap.get(RevColorSensorV3Ex.class, name);
     }
 
     public double getAlpha(){return alpha;}

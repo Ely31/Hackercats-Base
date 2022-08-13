@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.outoftheboxrobotics.photoncore.PhotonCore;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -18,6 +19,7 @@ public class BaseAuto extends LinearOpMode {
     @Override
     public void runOpMode(){
         // Init
+        PhotonCore.enable();
         drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(startpos);
 

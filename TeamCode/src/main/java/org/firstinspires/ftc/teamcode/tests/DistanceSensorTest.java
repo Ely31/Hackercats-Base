@@ -4,19 +4,19 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.hardware.sensors.DistanceSensor;
+import org.firstinspires.ftc.teamcode.hardware.sensors.RevDistanceSensor;
 import org.firstinspires.ftc.teamcode.util.TimeUtil;
 
 @Autonomous(name="",group="")
 public class DistanceSensorTest extends LinearOpMode {
     // Pre-init
-    DistanceSensor sensor;
+    RevDistanceSensor sensor;
     TimeUtil timeUtil = new TimeUtil();
     ElapsedTime timer = new ElapsedTime();
     @Override
     public void runOpMode() {
         // Init
-        sensor = new DistanceSensor(hardwareMap, "distance");
+        sensor = new RevDistanceSensor(hardwareMap, "distance");
         telemetry.addLine("initialized");
         waitForStart();
     

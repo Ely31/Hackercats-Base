@@ -1,19 +1,20 @@
 package org.firstinspires.ftc.teamcode.hardware.sensors;
 
+import com.outoftheboxrobotics.photoncore.Neutrino.Rev2MSensor.Rev2mDistanceSensorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public class DistanceSensor {
-    com.qualcomm.robotcore.hardware.DistanceSensor distanceSensor;
+public class RevDistanceSensor {
+    Rev2mDistanceSensorEx distanceSensor;
     String name;
 
     double distance;
 
-    public DistanceSensor(HardwareMap hardwareMap, String name){
+    public RevDistanceSensor(HardwareMap hardwareMap, String name){
         this.name = name;
-        distanceSensor = hardwareMap.get(com.qualcomm.robotcore.hardware.DistanceSensor.class, name);
+        distanceSensor = hardwareMap.get(Rev2mDistanceSensorEx.class, name);
     }
 
     public double getDistance(){return distance;}
