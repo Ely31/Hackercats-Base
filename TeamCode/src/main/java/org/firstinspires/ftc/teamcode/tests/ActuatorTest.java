@@ -11,15 +11,15 @@ import org.firstinspires.ftc.teamcode.hardware.actuators.Actuator;
 public class ActuatorTest extends LinearOpMode {
     // Pre init
     Actuator test;
-    String name;
     @Override
     public void runOpMode(){
         // Init
-        test = new Actuator(hardwareMap, name, 3.7);
-        //test.setLimits(0,360);
+        test = new Actuator(hardwareMap, "carousel", 3.7);
+        test.setLimits(0,360);
         waitForStart();
         while (opModeIsActive()){
             // Teleop code
+            test.update();
             if (gamepad1.a) {test.runToAngleRTP(180);}
             else test.runToAngleRTP(0);
 

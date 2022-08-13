@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.util.Utility;
+
 public class ActuatorEx extends Actuator{
 
     // For linear motion with a rack and pinion or spool and string, in centimeters
@@ -34,7 +36,7 @@ public class ActuatorEx extends Actuator{
     // PID position things
     public void setAnglePID(double angle) { // Make sure to use .setLimits before using this
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        target = utility.clipValue(minAngle, maxAngle, angle);
+        target = Utility.clipValue(minAngle, maxAngle, angle);
         positionController.setTargetPosition(target);
     }
 

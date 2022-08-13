@@ -17,7 +17,6 @@ import java.util.Objects;
 public class Actuator {
     DcMotorEx motor;
     private final MotorConstants motorConstants = new MotorConstants();
-    Utility utility = new Utility();
     String name;
     public double GEARBOX_RATIO;
     public double EXTERNAL_GEAR_RATIO = 1.0 / 1.0;
@@ -115,25 +114,14 @@ public class Actuator {
     public double getCurrentDistance(){return currentPosition / TICKS_PER_CM;}
 
     // RTP position methods
-    public void runToAngleRTP(double angle) { // Make sure to use .setLimits before using this
-        target = utility.clipValue(minAngle, maxAngle, angle);
-        motor.setTargetPosition((int) (target * TICKS_PER_DEGREE));
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor.setPower(1*MAX_POWER);
-    }
-    public void runToAngleRTP(double angle, double power) { // Make sure to use .setLimits before using this
-        target = utility.clipValue(minAngle, maxAngle, angle);
-        motor.setTargetPosition((int) (target * TICKS_PER_DEGREE));
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor.setPower(power*MAX_POWER);
+    // Make sure to use .setLimits before using this
+    public void runToAngleRTP(double angle) {runToAngleRTP(angle,1);}
+    public void runToAngleRTP(double angle, double power) {
+        angle = Utility.clipValue(minAngle, maxAngle, angle);
+        runToAngleRTP_Free(angle, power);
     }
     // "Free" means no limits on rotation apply. Use for mechanisms that can rotate continuously.
-    public void runToAngleRTP_Free(double angle) {
-        target = angle;
-        motor.setTargetPosition((int) (target * TICKS_PER_DEGREE));
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor.setPower(1*MAX_POWER);
-    }
+    public void runToAngleRTP_Free(double angle) {runToAngleRTP_Free(angle, 1);}
     public void runToAngleRTP_Free(double angle, double power) {
         target = angle;
         motor.setTargetPosition((int) (target * TICKS_PER_DEGREE));
@@ -144,7 +132,7 @@ public class Actuator {
     // PID positon methods
     public void setAnglePID(double angle) { // Make sure to use .setLimits before using this
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        target = utility.clipValue(minAngle, maxAngle, angle);
+        target = Utility.clipValue(minAngle, maxAngle, angle);
         positionController.setTargetPosition(target);
     }
 
