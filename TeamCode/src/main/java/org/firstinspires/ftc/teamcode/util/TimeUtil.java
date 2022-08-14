@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.util;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.ArrayList;
 
 public class TimeUtil {
     private final int endgameTime = 120;
     private final int endgameWarningTime = 112;
+    private ElapsedTime timer = new ElapsedTime();
 
     public Gamepad.RumbleEffect endgameWarningRumbleEffect = new Gamepad.RumbleEffect.Builder()
             .addStep(1,1,500)
@@ -98,20 +100,9 @@ public class TimeUtil {
         return latestLoopTime;
     }
 
-    public void updateGamepads(Gamepad g1, Gamepad g2){
-            if (justEnteredEndgameWarning()){
-                g1.runRumbleEffect(endgameWarningRumbleEffect);
-                g1.runLedEffect(endgameLightEffect);
-                g2.runRumbleEffect(endgameWarningRumbleEffect);
-                g2.runLedEffect(endgameLightEffect);
-            }
-            if (justEnteredEndgame()){
-                g1.runRumbleEffect(endgameRumbleEffect);
-                g1.runLedEffect(endgameLightEffect);
-                g2.runRumbleEffect(endgameRumbleEffect);
-                g2.runLedEffect(endgameLightEffect);
-            }
-        }
+    public void resetTimer(){
+        timer.reset();
+    }
 
     public void update(double currentTime){
         // Set which game period we're in by checking the time
@@ -143,5 +134,24 @@ public class TimeUtil {
         justEnteredEndgame = currentPeriod == Period.ENDGAME && lastPeriod == Period.ENDGAMEWARNING;
 
         lastPeriod = currentPeriod;
+    }
+    public void update(){
+        update(timer.milliseconds());
+    }
+
+    // Rumble and flash when endgame is near
+    public void updateGamepads(Gamepad g1, Gamepad g2){
+        if (justEnteredEndgameWarning()){
+            g1.runRumbleEffect(endgameWarningRumbleEffect);
+            g1.runLedEffect(endgameLightEffect);
+            g2.runRumbleEffect(endgameWarningRumbleEffect);
+            g2.runLedEffect(endgameLightEffect);
+        }
+        if (justEnteredEndgame()){
+            g1.runRumbleEffect(endgameRumbleEffect);
+            g1.runLedEffect(endgameLightEffect);
+            g2.runRumbleEffect(endgameRumbleEffect);
+            g2.runLedEffect(endgameLightEffect);
+        }
     }
 }

@@ -37,6 +37,8 @@ public class Actuator {
     double currentVelo;
     double currentPower;
     double currentCurrent; // current current, funny
+    DcMotorSimple.Direction currentDirection;
+    DcMotor.RunMode currentMode;
 
     // Pid stuff
     boolean PIDEnabled = false;
@@ -76,6 +78,8 @@ public class Actuator {
         currentVelo = motor.getVelocity();
         currentCurrent = motor.getCurrent(CurrentUnit.AMPS);
         currentPower = motor.getPower();
+        currentDirection = motor.getDirection();
+        currentMode = motor.getMode();
         if (PIDEnabled) motor.setPower(positionController.update(input));
     }
     public void update(){
@@ -83,6 +87,8 @@ public class Actuator {
         currentVelo = motor.getVelocity();
         currentCurrent = motor.getCurrent(CurrentUnit.AMPS);
         currentPower = motor.getPower();
+        currentDirection = motor.getDirection();
+        currentMode = motor.getMode();
     }
 
     // Power and other primative things
@@ -100,7 +106,9 @@ public class Actuator {
     public void zero() {
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
-    public void reverse() {motor.setDirection(DcMotorSimple.Direction.REVERSE);}
+    public void setDirection(DcMotorSimple.Direction direction) {motor.setDirection(direction);}
+    public DcMotorSimple.Direction getDirection(){return currentDirection;}
+    public DcMotor.RunMode getMode(){return currentMode;}
 
     // Position things
     public void setLimits(double min, double max){
@@ -145,9 +153,9 @@ public class Actuator {
     }
 
     // Velocity things
-    public void setVelocity(double velocity) {
+    public void setVelocity(double velocity) { // In rotations per second
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Not actually true setVelo, but it works
-        motor.setPower(velocity);
+        motor.setVelocity(velocity * TICKS_PER_REV);
     }
     public double getVelocityInRotations() {
         return currentVelo / TICKS_PER_REV;
@@ -175,17 +183,20 @@ public class Actuator {
         TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
     }
     public void displayDebugInfo(Telemetry telemetry) {
-        telemetry.addData("Current angle", getCurrentAngle());
-        telemetry.addData("Target angle", getTarget());
+        // All the "%.3f" bits make things look a lot nicer by limiting the digits to 3 after the decimal point
+        telemetry.addData("Current angle", "%.3f",getCurrentAngle());
+        telemetry.addData("Current velo (rotations per second)", "%.3f",getVelocityInRotations());
+        telemetry.addData("Target angle", "%.3f",getTarget());
         telemetry.addData("PID Gains", positionController);
         telemetry.addData("Min", minAngle);
         telemetry.addData("Max", maxAngle);
-        telemetry.addData("Runmode", motor.getMode());
-        telemetry.addData("Power", getPower());
-        telemetry.addData("Current", getCurrent());
-        telemetry.addData("Ticks per degree", TICKS_PER_DEGREE);
-        telemetry.addData("Ticks per rev", TICKS_PER_REV);
-        telemetry.addData("Ticks per cm", TICKS_PER_CM);
-        telemetry.addData("Gearbox ratio", GEARBOX_RATIO);
+        telemetry.addData("Runmode", getMode());
+        telemetry.addData("Direction", getDirection());
+        telemetry.addData("Power", "%.3f",getPower());
+        telemetry.addData("Current", "%.3f",getCurrent());
+        telemetry.addData("Ticks per degree", "%.3f",TICKS_PER_DEGREE);
+        telemetry.addData("Ticks per rev", "%.3f",TICKS_PER_REV);
+        telemetry.addData("Ticks per cm", "%.3f",TICKS_PER_CM);
+        telemetry.addData("Gearbox ratio", "%.3f",GEARBOX_RATIO);
     }
 }
