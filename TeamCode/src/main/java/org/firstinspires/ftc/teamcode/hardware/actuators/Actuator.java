@@ -45,14 +45,13 @@ public class Actuator {
     public void enablePID(){PIDEnabled = true;}
     public void disablePID(){PIDEnabled = false;}
 
-    public PIDFController positionController;
+    public PIDFController angleController;
+    public PIDFController linearController;
     // Must call setCoefficients to use any pid features
-    public void setPositionCoefficients(PIDCoefficients coefficients) {
-        positionController = new PIDFController(coefficients);
-    }
-    public void setVelocityCoefficients(PIDFCoefficients coefficients) {
-        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
-    }
+    public void setAngleCoefficients(PIDCoefficients coefficients) {angleController = new PIDFController(coefficients);}
+    public void setLinearCoefficients(PIDCoefficients coefficients) {linearController = new PIDFController(coefficients);}
+    // On-hub velo
+    public void setVelocityCoefficients(PIDFCoefficients coefficients) {motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);}
 
     // Constructors
     public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio, double externalGearRatio) {
@@ -80,7 +79,7 @@ public class Actuator {
         currentPower = motor.getPower();
         currentDirection = motor.getDirection();
         currentMode = motor.getMode();
-        if (PIDEnabled) motor.setPower(positionController.update(input));
+        if (PIDEnabled) motor.setPower(angleController.update(input));
     }
     public void update(){
         currentPosition = motor.getCurrentPosition();
@@ -141,7 +140,7 @@ public class Actuator {
     public void setAnglePID(double angle) { // Make sure to use .setLimits before using this
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         target = Utility.clipValue(minAngle, maxAngle, angle);
-        positionController.setTargetPosition(target);
+        angleController.setTargetPosition(target);
     }
 
     // Linear motion methods
@@ -150,6 +149,12 @@ public class Actuator {
         EFFECTIVE_DIAMETER = diameter;
         EFFECTIVE_CIRCUMFERENCE = EFFECTIVE_DIAMETER * Math.PI;
         TICKS_PER_CM = TICKS_PER_REV / EFFECTIVE_CIRCUMFERENCE;
+    }
+
+    public void setDistance(double distance) { // Make sure to use .setLimits before using this
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        target = Utility.clipValue(minAngle, maxAngle, distance);
+        linearController.setTargetPosition(target);
     }
 
     // Velocity things
@@ -183,11 +188,12 @@ public class Actuator {
         TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
     }
     public void displayDebugInfo(Telemetry telemetry) {
+        // Fill up telemetry with all the info you could ever want
         // All the "%.3f" bits make things look a lot nicer by limiting the digits to 3 after the decimal point
         telemetry.addData("Current angle", "%.3f",getCurrentAngle());
         telemetry.addData("Current velo (rotations per second)", "%.3f",getVelocityInRotations());
         telemetry.addData("Target angle", "%.3f",getTarget());
-        telemetry.addData("PID Gains", positionController);
+        telemetry.addData("PID Gains", angleController);
         telemetry.addData("Min", minAngle);
         telemetry.addData("Max", maxAngle);
         telemetry.addData("Runmode", getMode());
