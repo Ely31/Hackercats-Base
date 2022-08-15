@@ -28,9 +28,12 @@ public class Actuator {
     private double TICKS_PER_CM;
     double maxAngle;
     double minAngle;
+    double maxDistance;
+    double minDistance;
     double MAX_POWER = 1;
 
-    double target = 0;
+    double targetAngle = 0;
+    double targetDistance = 0;
 
     // Variables to save read data to so we only have to read from the motor once a loop
     double currentPosition; // In ticks
@@ -41,15 +44,28 @@ public class Actuator {
     DcMotor.RunMode currentMode;
 
     // Pid stuff
-    boolean PIDEnabled = false;
-    public void enablePID(){PIDEnabled = true;}
-    public void disablePID(){PIDEnabled = false;}
+    enum PidMode{
+        ANGULAR,
+        LINEAR,
+        DISABLED
+    }
+    PidMode pidMode = PidMode.DISABLED;
+    public PidMode getPidMode(){return pidMode;}
 
+    public PIDCoefficients angleCoeffs;
+    public PIDCoefficients distanceCoeffs;
     public PIDFController angleController;
-    public PIDFController linearController;
+    public PIDFController distanceController;
     // Must call setCoefficients to use any pid features
-    public void setAngleCoefficients(PIDCoefficients coefficients) {angleController = new PIDFController(coefficients);}
-    public void setLinearCoefficients(PIDCoefficients coefficients) {linearController = new PIDFController(coefficients);}
+    public void setAngleCoefficients(PIDCoefficients coefficients) {
+        angleCoeffs = coefficients;
+        angleController = new PIDFController(angleCoeffs);
+    }
+    public void setLinearCoefficients(PIDCoefficients coefficients) {
+        distanceCoeffs = coefficients;
+        distanceController = new PIDFController(angleCoeffs);
+
+    }
     // On-hub velo
     public void setVelocityCoefficients(PIDFCoefficients coefficients) {motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);}
 
@@ -60,6 +76,7 @@ public class Actuator {
         setTicks(gearboxRatio);
 
         motor = hardwareMap.get(DcMotorEx.class, name);
+        zero();
     }
     public Actuator(HardwareMap hardwareMap, String name, double gearboxRatio) {
         this.name = name;
@@ -67,20 +84,12 @@ public class Actuator {
         setTicks(gearboxRatio);
 
         motor = hardwareMap.get(DcMotorEx.class, name);
+        zero();
     }
 
     // you MUST call update EVERY loop for this stuff to work
     // it's done this way so that we only read from the motor once a loop, saving that data to variables,
     // so we don't hurt loop times by grabbing it multiple times.
-    public void update(double input){
-        currentPosition = motor.getCurrentPosition();
-        currentVelo = motor.getVelocity();
-        currentCurrent = motor.getCurrent(CurrentUnit.AMPS);
-        currentPower = motor.getPower();
-        currentDirection = motor.getDirection();
-        currentMode = motor.getMode();
-        if (PIDEnabled) motor.setPower(angleController.update(input));
-    }
     public void update(){
         currentPosition = motor.getCurrentPosition();
         currentVelo = motor.getVelocity();
@@ -88,6 +97,18 @@ public class Actuator {
         currentPower = motor.getPower();
         currentDirection = motor.getDirection();
         currentMode = motor.getMode();
+        switch (pidMode){
+            case ANGULAR:
+                setPower(angleController.update(getCurrentAngle()));
+                break;
+
+            case LINEAR:
+                setPower(angleController.update(getCurrentDistance()));
+                break;
+
+            case DISABLED:
+                break;
+        }
     }
 
     // Power and other primative things
@@ -107,18 +128,17 @@ public class Actuator {
     }
     public void setDirection(DcMotorSimple.Direction direction) {motor.setDirection(direction);}
     public DcMotorSimple.Direction getDirection(){return currentDirection;}
-    public DcMotor.RunMode getMode(){return currentMode;}
+    public DcMotor.RunMode getRunMode(){return currentMode;}
 
     // Position things
-    public void setLimits(double min, double max){
+    public void setAngularLimits(double min, double max){
         minAngle = min;
         maxAngle = max;
     }
-    public double getMax() {return maxAngle;}
-    public  double getMin() {return minAngle;}
-    public double getTarget() {return target;}
+    public double getMaxAngle() {return maxAngle;}
+    public  double getMinAngle() {return minAngle;}
+    public double getTargetAngle() {return targetAngle;}
     public double getCurrentAngle() {return currentPosition / TICKS_PER_DEGREE;}
-    public double getCurrentDistance(){return currentPosition / TICKS_PER_CM;}
 
     // RTP position methods
     // Make sure to use .setLimits before using this
@@ -130,17 +150,19 @@ public class Actuator {
     // "Free" means no limits on rotation apply. Use for mechanisms that can rotate continuously.
     public void runToAngleRTP_Free(double angle) {runToAngleRTP_Free(angle, 1);}
     public void runToAngleRTP_Free(double angle, double power) {
-        target = angle;
-        motor.setTargetPosition((int) (target * TICKS_PER_DEGREE));
+        pidMode = PidMode.DISABLED;
+        targetAngle = angle;
+        motor.setTargetPosition((int) (targetAngle * TICKS_PER_DEGREE));
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motor.setPower(power*MAX_POWER);
     }
 
     // PID positon methods
     public void setAnglePID(double angle) { // Make sure to use .setLimits before using this
+        pidMode = PidMode.ANGULAR;
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        target = Utility.clipValue(minAngle, maxAngle, angle);
-        angleController.setTargetPosition(target);
+        targetAngle = Utility.clipValue(minAngle, maxAngle, angle);
+        angleController.setTargetPosition(targetAngle);
     }
 
     // Linear motion methods
@@ -150,15 +172,23 @@ public class Actuator {
         EFFECTIVE_CIRCUMFERENCE = EFFECTIVE_DIAMETER * Math.PI;
         TICKS_PER_CM = TICKS_PER_REV / EFFECTIVE_CIRCUMFERENCE;
     }
+    public double getCurrentDistance(){return currentPosition / TICKS_PER_CM;}
+    public double getTargetDistance(){return targetDistance;}
+    public void setDistanceLimits(double min, double max){
+        minDistance = min;
+        maxDistance = max;
+    }
 
     public void setDistance(double distance) { // Make sure to use .setLimits before using this
+        pidMode = PidMode.LINEAR;
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        target = Utility.clipValue(minAngle, maxAngle, distance);
-        linearController.setTargetPosition(target);
+        targetDistance = Utility.clipValue(minDistance, maxDistance, distance);
+        distanceController.setTargetPosition(targetDistance);
     }
 
     // Velocity things
     public void setVelocity(double velocity) { // In rotations per second
+        pidMode = PidMode.DISABLED;
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Not actually true setVelo, but it works
         motor.setVelocity(velocity * TICKS_PER_REV);
     }
@@ -168,6 +198,7 @@ public class Actuator {
     public double getVelocityInDegrees() {
         return currentVelo / TICKS_PER_DEGREE;
     }
+
 
     // Miscellaneous methods
     public double getCurrent() {return currentCurrent;}
@@ -192,17 +223,20 @@ public class Actuator {
         // All the "%.3f" bits make things look a lot nicer by limiting the digits to 3 after the decimal point
         telemetry.addData("Current angle", "%.3f",getCurrentAngle());
         telemetry.addData("Current velo (rotations per second)", "%.3f",getVelocityInRotations());
-        telemetry.addData("Target angle", "%.3f",getTarget());
-        telemetry.addData("PID Gains", angleController);
+        telemetry.addData("Target angle", "%.3f", getTargetAngle());
+        telemetry.addData("Angle error", angleController.getLastError());
+        telemetry.addData("Target distance", getTargetDistance());
+        telemetry.addData("Distance error", distanceController.getLastError());
+        telemetry.addData("PID mode", getPidMode());
         telemetry.addData("Min", minAngle);
         telemetry.addData("Max", maxAngle);
-        telemetry.addData("Runmode", getMode());
+        telemetry.addData("Runmode", getRunMode());
         telemetry.addData("Direction", getDirection());
         telemetry.addData("Power", "%.3f",getPower());
         telemetry.addData("Current", "%.3f",getCurrent());
         telemetry.addData("Ticks per degree", "%.3f",TICKS_PER_DEGREE);
         telemetry.addData("Ticks per rev", "%.3f",TICKS_PER_REV);
         telemetry.addData("Ticks per cm", "%.3f",TICKS_PER_CM);
-        telemetry.addData("Gearbox ratio", "%.3f",GEARBOX_RATIO);
+        telemetry.addData("Gearbox ratio", "%.1f",GEARBOX_RATIO);
     }
 }

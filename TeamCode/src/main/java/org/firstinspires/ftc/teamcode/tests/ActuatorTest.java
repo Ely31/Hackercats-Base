@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.tests;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.outoftheboxrobotics.photoncore.PhotonCore;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -33,13 +35,15 @@ public class ActuatorTest extends LinearOpMode {
     public static double max = 360;
     public static double pos1 = 0;
     public static double pos2 = 360;
+    public static double dist1 = 0;
+    public static double dist2 = 300;
     private double velo = 0;
     public static double maxPower = 1;
     public static double gearboxRatio = 3.7;
     public static double externalRatio = 1.0/1.0;
     public static double diameter = 4;
     public static String name = "carousel";
-    public static com.acmerobotics.roadrunner.control.PIDCoefficients angleCoeffs = new PIDCoefficients(0,0,0);
+    public static com.acmerobotics.roadrunner.control.PIDCoefficients angleCoeffs = new PIDCoefficients(0.012,0.002,0.0002);
     public static com.acmerobotics.roadrunner.control.PIDCoefficients linearCoeffs = new PIDCoefficients(0,0,0);
 
     Gamepad prevGamepad = new Gamepad();
@@ -50,17 +54,18 @@ public class ActuatorTest extends LinearOpMode {
         PhotonCore.enable();
         actuator = new Actuator(hardwareMap, name, gearboxRatio);
         actuator.setDiameter(diameter);
-        actuator.setLimits(min,max);
+        actuator.setAngularLimits(min,max);
         actuator.setAngleCoefficients(angleCoeffs);
         actuator.setLinearCoefficients(linearCoeffs);
 
         // Make telemetry good
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.setMsTransmissionInterval(100);
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
 
         waitForStart();
-        timeUtil.resetTimer();
 
+        timeUtil.resetTimer();
         while (opModeIsActive()){
             // Teleop code
             // Gamepad shenannigans
@@ -71,7 +76,7 @@ public class ActuatorTest extends LinearOpMode {
 
             // Update everything
             actuator.update();
-            actuator.setLimits(min, max);
+            actuator.setAngularLimits(min, max);
             actuator.setAngleCoefficients(angleCoeffs);
             actuator.setLinearCoefficients(linearCoeffs);
             timeUtil.update();
@@ -86,9 +91,9 @@ public class ActuatorTest extends LinearOpMode {
                     }
                     // Control power with sticks, right stick is half power
                     actuator.setPower((-currentGamepad.left_stick_y) + (-currentGamepad.right_stick_y *0.5));
-                    gamepad1.setLedColor(1,0,0, -1);
 
                     if (sharePressed()) {
+                        gamepad1.rumble(300);
                         actuator.stop();
                         mode = Mode.RTP;
                     }
@@ -99,17 +104,21 @@ public class ActuatorTest extends LinearOpMode {
                     if (currentGamepad.dpad_right) actuator.runToAngleRTP(pos2, maxPower);
 
                     if (sharePressed()){
+                        gamepad1.rumble(300);
                         mode = Mode.VELOCITY;
                     }
                     break;
                 case VELOCITY:
-                    if (currentGamepad.dpad_up) velo += 0.1;
-                    if (currentGamepad.dpad_down) velo -= 0.1;
+                    if (currentGamepad.dpad_up) velo += 0.02;
+                    if (currentGamepad.dpad_down) velo -= 0.02;
 
                     actuator.setVelocity(velo);
                     
                     if (sharePressed()){
+                        gamepad1.rumble(300);
+                        actuator.setVelocity(0);
                         velo = 0;
+                        actuator.stop();
                         mode = Mode.PID;
                     }
                     break;
@@ -119,15 +128,19 @@ public class ActuatorTest extends LinearOpMode {
                     if (currentGamepad.dpad_right) actuator.setAnglePID(pos2);
 
                     if (sharePressed()){
+                        gamepad1.rumble(300);
                         actuator.stop();
                         mode = Mode.LINEAR;
                     }
                     break;
 
                 case LINEAR:
-
+                    if (currentGamepad.dpad_left) actuator.setDistance(dist1);
+                    if (currentGamepad.dpad_right) actuator.setDistance(dist2);
 
                     if (sharePressed()){
+                        gamepad1.rumble(300);
+                        actuator.stop();
                         mode = Mode.BASIC;
                     }
                     break;
