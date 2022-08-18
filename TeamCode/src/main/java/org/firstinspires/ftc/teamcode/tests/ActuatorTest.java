@@ -43,7 +43,7 @@ public class ActuatorTest extends LinearOpMode {
     public static double externalRatio = 1.0/1.0;
     public static double diameter = 4;
     public static String name = "carousel";
-    public static com.acmerobotics.roadrunner.control.PIDCoefficients angleCoeffs = new PIDCoefficients(0.012,0.002,0.0002);
+    public static com.acmerobotics.roadrunner.control.PIDCoefficients angleCoeffs = new PIDCoefficients(0.001,0,0);
     public static com.acmerobotics.roadrunner.control.PIDCoefficients linearCoeffs = new PIDCoefficients(0,0,0);
 
     Gamepad prevGamepad = new Gamepad();
@@ -81,6 +81,7 @@ public class ActuatorTest extends LinearOpMode {
             actuator.setLinearCoefficients(linearCoeffs);
             timeUtil.update();
 
+
             // Fsm to switch modes
             switch (mode){
                 case BASIC:
@@ -92,10 +93,10 @@ public class ActuatorTest extends LinearOpMode {
                     // Control power with sticks, right stick is half power
                     actuator.setPower((-currentGamepad.left_stick_y) + (-currentGamepad.right_stick_y *0.5));
 
-                    if (sharePressed()) {
-                        gamepad1.rumble(300);
+                    if (shareJustPressed()) {
+                        gamepad1.rumble(200);
                         actuator.stop();
-                        mode = Mode.RTP;
+                        mode = Mode.PID;
                     }
                     break;
 
@@ -103,19 +104,20 @@ public class ActuatorTest extends LinearOpMode {
                     if (currentGamepad.dpad_left) actuator.runToAngleRTP(pos1, maxPower);
                     if (currentGamepad.dpad_right) actuator.runToAngleRTP(pos2, maxPower);
 
-                    if (sharePressed()){
-                        gamepad1.rumble(300);
+                    if (shareJustPressed()){
+                        gamepad1.rumble(200);
+                        actuator.stop();
                         mode = Mode.VELOCITY;
                     }
                     break;
                 case VELOCITY:
-                    if (currentGamepad.dpad_up) velo += 0.02;
-                    if (currentGamepad.dpad_down) velo -= 0.02;
+                    if (currentGamepad.dpad_right) velo += 0.02;
+                    if (currentGamepad.dpad_left) velo -= 0.02;
 
                     actuator.setVelocity(velo);
                     
-                    if (sharePressed()){
-                        gamepad1.rumble(300);
+                    if (shareJustPressed()){
+                        gamepad1.rumble(200);
                         actuator.setVelocity(0);
                         velo = 0;
                         actuator.stop();
@@ -127,8 +129,8 @@ public class ActuatorTest extends LinearOpMode {
                     if (currentGamepad.dpad_left) actuator.setAnglePID(pos1);
                     if (currentGamepad.dpad_right) actuator.setAnglePID(pos2);
 
-                    if (sharePressed()){
-                        gamepad1.rumble(300);
+                    if (shareJustPressed()){
+                        gamepad1.rumble(200);
                         actuator.stop();
                         mode = Mode.LINEAR;
                     }
@@ -138,8 +140,8 @@ public class ActuatorTest extends LinearOpMode {
                     if (currentGamepad.dpad_left) actuator.setDistance(dist1);
                     if (currentGamepad.dpad_right) actuator.setDistance(dist2);
 
-                    if (sharePressed()){
-                        gamepad1.rumble(300);
+                    if (shareJustPressed()){
+                        gamepad1.rumble(200);
                         actuator.stop();
                         mode = Mode.BASIC;
                     }
@@ -157,5 +159,5 @@ public class ActuatorTest extends LinearOpMode {
         }
     }
     // So I don't have to write this every state switch
-    boolean sharePressed(){return currentGamepad.share && !prevGamepad.share;}
+    boolean shareJustPressed(){return currentGamepad.share && !prevGamepad.share;}
 }

@@ -99,11 +99,13 @@ public class Actuator {
         currentMode = motor.getMode();
         switch (pidMode){
             case ANGULAR:
+                angleController.setTargetPosition(targetAngle);
                 setPower(angleController.update(getCurrentAngle()));
                 break;
 
             case LINEAR:
-                setPower(angleController.update(getCurrentDistance()));
+                distanceController.setTargetPosition(targetDistance);
+                setPower(distanceController.update(getCurrentDistance()));
                 break;
 
             case DISABLED:
@@ -156,13 +158,24 @@ public class Actuator {
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motor.setPower(power*MAX_POWER);
     }
+    // Velocity things
+    public void setVelocity(double velocity) { // In rotations per second
+        pidMode = PidMode.DISABLED;
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setVelocity(velocity * TICKS_PER_REV);
+    }
+    public double getVelocityInRotations() {
+        return currentVelo / TICKS_PER_REV;
+    }
+    public double getVelocityInDegrees() {
+        return currentVelo / TICKS_PER_DEGREE;
+    }
 
     // PID positon methods
     public void setAnglePID(double angle) { // Make sure to use .setLimits before using this
         pidMode = PidMode.ANGULAR;
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         targetAngle = Utility.clipValue(minAngle, maxAngle, angle);
-        angleController.setTargetPosition(targetAngle);
     }
 
     // Linear motion methods
@@ -183,22 +196,7 @@ public class Actuator {
         pidMode = PidMode.LINEAR;
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         targetDistance = Utility.clipValue(minDistance, maxDistance, distance);
-        distanceController.setTargetPosition(targetDistance);
     }
-
-    // Velocity things
-    public void setVelocity(double velocity) { // In rotations per second
-        pidMode = PidMode.DISABLED;
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // Not actually true setVelo, but it works
-        motor.setVelocity(velocity * TICKS_PER_REV);
-    }
-    public double getVelocityInRotations() {
-        return currentVelo / TICKS_PER_REV;
-    }
-    public double getVelocityInDegrees() {
-        return currentVelo / TICKS_PER_DEGREE;
-    }
-
 
     // Miscellaneous methods
     public double getCurrent() {return currentCurrent;}
@@ -224,7 +222,7 @@ public class Actuator {
         telemetry.addData("Current angle", "%.3f",getCurrentAngle());
         telemetry.addData("Current velo (rotations per second)", "%.3f",getVelocityInRotations());
         telemetry.addData("Target angle", "%.3f", getTargetAngle());
-        telemetry.addData("Angle error", angleController.getLastError());
+        telemetry.addData("Angle error", "%.3f",angleController.getLastError());
         telemetry.addData("Target distance", getTargetDistance());
         telemetry.addData("Distance error", distanceController.getLastError());
         telemetry.addData("PID mode", getPidMode());
